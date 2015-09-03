@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="ChartCtrl">
+      <UniqueIdentifier>{4c396f67-0c46-40f1-b909-6fdebd2d1278}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+    <None Include="res\PhidgetCloseLoop.rc2">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\PhidgetCloseLoop.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="PhidgetCloseLoop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PhidgetCloseLoopDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClassArr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="phidget21.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ChartCtrl\ChartSerie.h">
+      <Filter>ChartCtrl</Filter>
+    </ClInclude>
+    <ClInclude Include="ChartCtrl\ChartSeriesMouseListener.h">
+      <Filter>ChartCtrl</Filter>
+    </ClInclude>
+    <ClInclude Include="Stepper-simple.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="PhidgetCloseLoop.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PhidgetCloseLoopDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartAxis.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartAxisLabel.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartBarSerie.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartCandlestickSerie.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartCrossHairCursor.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartCtrl.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartCursor.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartDateTimeAxis.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartDragLineCursor.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartFont.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartGanttSerie.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartGradient.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartGrid.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartLegend.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartLineSerie.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartLogarithmicAxis.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartPointsSerie.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartScrollBar.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartSerie.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartStandardAxis.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartSurfaceSerie.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartTitle.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="ChartCtrl\ChartXYSerie.cpp">
+      <Filter>ChartCtrl</Filter>
+    </ClCompile>
+    <ClCompile Include="Stepper-simple.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="PhidgetCloseLoop.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
