@@ -107,5 +107,8 @@
     <ClInclude Include="spline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="eventhandlers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

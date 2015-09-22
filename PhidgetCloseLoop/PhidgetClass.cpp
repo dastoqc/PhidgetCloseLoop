@@ -15,34 +15,36 @@
 #include "math.h"
 #include "phidget21.h"
 #include "PhidgetClass.h"
+#include "eventhandlers.h"
+
+/*#ifndef WIN32
+#ifndef __stdcall
+#define __stdcall __attribute__((stdcall))
+#endif
+#endif*/
 
 using namespace std;
-#define MAX_BUFFER 10000
 
-int CCONV CAttachHandler(CPhidgetHandle IFK, void *userptr)
-{
-	((CPhidgetWrapper *)userptr)->AttachHandler(IFK);
-	return 0;
-}
-int CCONV CDetachHandler(CPhidgetHandle IFK, void *userptr)
-{
-	((CPhidgetWrapper *)userptr)->DetachHandler(IFK);
-	return 0;
-}
-int CCONV CErrorHandler(CPhidgetHandle IFK, void *userptr, int ErrorCode, const char *unknown)
-{
-	((CPhidgetWrapper *)userptr)->ErrorHandler(IFK,ErrorCode,unknown);	
-	return 0;
-}
-static int CCONV CPositionChangeHandler(CPhidgetStepperHandle stepper, void *userptr, int Index, __int64 Value)
-{
-	((CPhidgetWrapper *)userptr)->PositionChangeHandler(stepper, Index, Value);
-	return 0;
-}
-static int CCONV CEncoderUpdateHandler(CPhidgetMotorControlHandle phid, void *userptr, int index, int positionChange)
-{
-	((CPhidgetWrapper *)userptr)->EncoderUpdateHandler(phid, index, positionChange);
-	return 0;
+CPhidgetWrapper::CPhidgetWrapper() {
+	//id of the card
+	devid = 0;
+	// handle for the stepper communication
+	stepper = 0;
+	// is it a stepper? if not a dc motor.
+	type_ref = 0;
+	// handle for the dcmotor communication
+	motorctl = 0;
+	// boolean to start the pid control (one at the time!)
+	started_pos = false; started_cur = false;
+	// ratio of the gear box of the dc motor (to get the right rotation from the encoder)
+	gearRatio = 24;
+	// current values reed from the board.
+	curr_pos = 0;curr_cur = 0;curr_vel = 0;
+	// PID control values
+	K[0] = 50; K[1] = 1; K[2] = 10;
+	errorlast = 0.0; deadBand = 0.00001; integral = 0; derivative = 0;
+	// command in position or current for closed-loop
+	target = 0;
 }
 
 int CPhidgetWrapper::AttachHandler(CPhidgetHandle IFK)
@@ -86,6 +88,35 @@ int CPhidgetWrapper::PositionChangeHandler(CPhidgetStepperHandle IFK, int Index,
 	GoToStepper(0, stepcommand);
 	return 0;
 }
+
+int CPhidgetWrapper::CurrentUpdateHandler(CPhidgetMotorControlHandle IFK, int index, double current)
+{
+	if (current > 0.5)
+		cout << "High current!!!" << endl;
+
+	if (current > 1.5) {
+		cout << "Dangerous current!!!" << endl;
+		setvel(0);
+	}
+
+	curr_cur = current;
+
+	// If feedback is negative, loop back around to 360
+	//if (feedback < 0)
+	//    feedback += 2*PI;
+
+	// If the start button has been pressed,
+	if (started_cur)
+	{
+		// Calculate and set the new output from the control loop
+		double output = PID(target - curr_cur, errorlast);
+		CPhidgetMotorControl_setVelocity(motorctl, 0, output);
+		errorlast = target - curr_cur;
+	}
+		
+		
+	return 0;
+}
 // This event handler fires every 8ms, regardless of whether the position has changed. 
 // If you want to create an event that only fires when position is changed, use "EncoderPositionChange"
 int CPhidgetWrapper::EncoderUpdateHandler(CPhidgetMotorControlHandle phid, int index, int positionChange)
@@ -97,28 +128,34 @@ int CPhidgetWrapper::EncoderUpdateHandler(CPhidgetMotorControlHandle phid, int i
 	double feedback = (double)positionChange*2*PI/512.0 / gearRatio;//fmod((double)(positionChange / gearRatio), 2*PI);
 	curr_pos+=feedback;
 	curr_vel=feedback/8.0*1000.0;
+	//cout << "Velocities: " << curr_vel*gearRatio << endl;
  
     // If feedback is negative, loop back around to 360
     //if (feedback < 0)
     //    feedback += 2*PI;
  
     // If the start button has been pressed,
-    if (started)
+    if (started_pos)
     {
         // Calculate and set the new output from the control loop
-        double output = PID();
-		CPhidgetMotorControl_setVelocity(motorctl, 0, floor(output));
+        double output = PID(target - curr_pos, errorlast);
+		CPhidgetMotorControl_setVelocity(motorctl, 0, output);
+		errorlast = target - curr_pos;
     }
 	return 0;
 }
 
 void CPhidgetWrapper::setvel(double pwr)
 {
-	if(abs(pwr) > maxOutput)
-		pwr = sgn(pwr)*maxOutput;
-	if(abs(pwr) < vmin)
-		pwr = sgn(pwr)*vmin;
-	CPhidgetMotorControl_setVelocity(motorctl, 0, floor(pwr));
+	if (abs(pwr) > MaxVel) {
+		cout << "Max output reached!!" << endl;
+		pwr = sgn(pwr) * 100.0;
+	}
+	if (abs(pwr) < MinVel) {
+		cout << "Min output reached!!" << endl;
+		pwr = 0.0;
+	}
+	CPhidgetMotorControl_setVelocity(motorctl, 0, pwr);
 }
 
 //Display the properties of the attached phidget to the screen.  We will be displaying the name, serial number and version of the attached device.
@@ -257,6 +294,7 @@ int CPhidgetWrapper::InitMotorCtl(int num)
 	CPhidget_set_OnDetach_Handler((CPhidgetHandle)motorctl, CDetachHandler, this);
 	CPhidget_set_OnError_Handler((CPhidgetHandle)motorctl, CErrorHandler, this);
 	CPhidgetMotorControl_set_OnEncoderPositionUpdate_Handler(motorctl, CEncoderUpdateHandler, this);
+	CPhidgetMotorControl_set_OnCurrentUpdate_Handler(motorctl, CCurrentUpdateHandler, this);
 
 	//open the device for connections
 	CPhidget_open((CPhidgetHandle)motorctl, -1);
@@ -292,22 +330,17 @@ int CPhidgetWrapper::InitMotorCtl(int num)
 int CPhidgetWrapper::stepper_simple(int num, __int64 targetsteps)
 {
 	__int64 curr_pos;
-	double *XValues = new double[MAX_BUFFER];
-	double *YValuesO = new double[MAX_BUFFER];
-	double *YValuesI = new double[MAX_BUFFER];
 	char FPS[50];
 	int stopped;
 
 	cout<<"SINUS"<<endl;
 	int start = GetTickCount();int elapsed=0;int target=0;int freq=0;int i=0;
-	while((double)elapsed/1000.0<10.0 && i<MAX_BUFFER)		//sinus test for 10 sec.
+	while((double)elapsed/1000.0<10.0)		//sinus test for 10 sec.
 	{
 		elapsed = GetTickCount()-start;
 		target = rad2steps(PI/2*sin(2*(double)elapsed/1000.0));
 		CPhidgetStepper_setTargetPosition (stepper, num, target);
 		CPhidgetStepper_getCurrentPosition(stepper, num, &curr_pos);
-		YValuesI[i]=PI/2*sin(2*(double)elapsed/1000.0);
-		YValuesO[i]=steps2rad(curr_pos);XValues[i]=(double)elapsed/1000.0;
 		freq = GetTickCount()-start-elapsed;
 		if(freq!=0)
 			sprintf(FPS,"%3.3f", 1/((double)freq/1000.0));
@@ -362,18 +395,26 @@ int CPhidgetWrapper::GoToStepper(int num, int steps)
 	return 0;
 }
 
+void CPhidgetWrapper::setGains(double P, double I, double D, double max, double min)
+{
+	K[0] = P;
+	K[1] = I;
+	K[2] = D;
+	MaxVel = max; MinVel = min;
+	return;
+}
 // This function does the control system calculations and sets output to the duty cycle that the motor needs to run at.
-double CPhidgetWrapper::PID()
+double CPhidgetWrapper::PID(double error, double errorlast)
 {
 	double output = 0;
 	double dt = 8.0/1000.0;
     // Calculate how far we are from the target
-    double errorlast = error;
-    error = target-curr_pos;//distance360(target, feedback);
+    //double errorlast = error;
+    //error = target-curr_pos;//distance360(target, feedback);
  
     // If the error is within the specified deadband, and the motor is moving slowly enough,
     // Or if the motor's target is a physical limit and that limit is hit (within deadband margins),
-    if ((abs(error) <= deadBand && abs(output) <= vmin))
+    if ((abs(error) <= deadBand && abs(output) <= MinVel))
     {
         // Stop the motor
         output = 0;
@@ -395,11 +436,12 @@ double CPhidgetWrapper::PID()
     //And prevent the duty cycle from falling below the minimum velocity (excluding zero)
     //The minimum velocity exists because some DC motors with gearboxes will not be able to overcome the detent torque
     //of the gearbox at low velocities.
-    if (abs(output) >= maxOutput){
-        output = sgn(output)*maxOutput;
+    if (abs(output) >= MaxVel){
+        output = sgn(output)*MaxVel;
 		cout << "Reach max output" << endl;
-	}else if (abs(output) < vmin)
-        output = sgn(output)*vmin;
+	}
+	else if (abs(output) < MinVel)
+		output = sgn(output)*MinVel;
     else
         integral += (error * dt);
  
@@ -415,6 +457,8 @@ double CPhidgetWrapper::PID()
 int CPhidgetWrapper::closeMot()
 {
 	int rc;
+	started_pos = false; started_cur = 0;
+	Sleep(100);
 	if(type_ref)
 		rc = CloseStepper(0);
 	else
